@@ -1,67 +1,100 @@
 
 import { Meeting } from "@/types/meeting";
-import { mockMeetings } from "./mock-data";
 
-// In a real app, this would connect to your webhook endpoint or database
+const API_URL = "/api/meetings";
+
+// Função para buscar todas as reuniões
 export const fetchMeetings = async (): Promise<Meeting[]> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return mockMeetings;
+  try {
+    const response = await fetch(API_URL);
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Erro ao buscar reuniões:", error);
+    return [];
+  }
 };
 
+// Função para buscar uma reunião específica por ID
 export const fetchMeetingById = async (id: string): Promise<Meeting | undefined> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return mockMeetings.find((meeting) => meeting.id === id);
+  try {
+    const response = await fetch(`${API_URL}/${id}`);
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Erro ao buscar reunião com ID ${id}:`, error);
+    return undefined;
+  }
 };
 
+// Função para pesquisar reuniões com filtros
 export const searchMeetings = async (
   query: string,
   organizer: string,
   dateFrom: string,
   dateTo: string
 ): Promise<Meeting[]> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  
-  return mockMeetings.filter((meeting) => {
-    const matchesQuery =
-      !query ||
-      meeting.resumo.toLowerCase().includes(query.toLowerCase()) ||
-      meeting.transcricao.toLowerCase().includes(query.toLowerCase());
-      
-    const matchesOrganizer = !organizer || meeting.organizador === organizer;
+  try {
+    // Constrói a URL com parâmetros de consulta
+    const params = new URLSearchParams();
+    if (query) params.append("query", query);
+    if (organizer) params.append("organizer", organizer);
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
     
-    const meetingDate = new Date(meeting.data_reuniao);
-    const fromDate = dateFrom ? new Date(dateFrom) : null;
-    const toDate = dateTo ? new Date(dateTo) : null;
+    const url = `${API_URL}/search?${params.toString()}`;
+    const response = await fetch(url);
     
-    const matchesDateFrom = !fromDate || meetingDate >= fromDate;
-    const matchesDateTo = !toDate || meetingDate <= toDate;
-    
-    return matchesQuery && matchesOrganizer && matchesDateFrom && matchesDateTo;
-  });
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Erro ao pesquisar reuniões:", error);
+    return [];
+  }
 };
 
+// Função para obter estatísticas
 export const getStatistics = async () => {
-  const allMeetings = await fetchMeetings();
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-  
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  
-  const meetingsThisWeek = allMeetings.filter(
-    (meeting) => new Date(meeting.data_reuniao) >= startOfWeek
-  );
-  
-  const meetingsThisMonth = allMeetings.filter(
-    (meeting) => new Date(meeting.data_reuniao) >= startOfMonth
-  );
-  
-  return {
-    total: allMeetings.length,
-    thisWeek: meetingsThisWeek.length,
-    thisMonth: meetingsThisMonth.length,
-  };
+  try {
+    const response = await fetch(`${API_URL}/statistics`);
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Erro ao obter estatísticas:", error);
+    return {
+      total: 0,
+      thisWeek: 0,
+      thisMonth: 0
+    };
+  }
+};
+
+// Função para receber novos dados do webhook
+export const receiveWebhookData = async (data: Omit<Meeting, "id">): Promise<Meeting | null> => {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro ao processar dados do webhook: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Erro ao processar dados do webhook:", error);
+    return null;
+  }
 };

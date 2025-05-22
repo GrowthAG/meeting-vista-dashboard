@@ -15,7 +15,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Meetings</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Reuniões</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.total}</div>
@@ -24,7 +24,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">This Week</CardTitle>
+          <CardTitle className="text-sm font-medium">Esta Semana</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.thisWeek}</div>
@@ -33,7 +33,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => {
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">This Month</CardTitle>
+          <CardTitle className="text-sm font-medium">Este Mês</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.thisMonth}</div>

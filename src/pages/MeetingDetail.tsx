@@ -29,7 +29,7 @@ const MeetingDetail = () => {
           navigate("/"); // Redirect if meeting not found
         }
       } catch (error) {
-        console.error("Error loading meeting:", error);
+        console.error("Erro ao carregar reunião:", error);
       } finally {
         setLoading(false);
       }
@@ -53,9 +53,9 @@ const MeetingDetail = () => {
   if (!meeting) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Meeting not found</h1>
+        <h1 className="text-2xl font-bold mb-4">Reunião não encontrada</h1>
         <Button onClick={() => navigate("/")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Painel
         </Button>
       </div>
     );
@@ -68,13 +68,13 @@ const MeetingDetail = () => {
         className="mb-6"
         onClick={() => navigate("/")}
       >
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para o Painel
       </Button>
 
       <div className="grid gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">
-            Meeting Details
+            Detalhes da Reunião
           </h1>
           <p className="text-muted-foreground">
             {formatDate(meeting.data_reuniao)} • {meeting.horario_reuniao}
@@ -84,7 +84,7 @@ const MeetingDetail = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Organizer</CardTitle>
+              <CardTitle>Organizador</CardTitle>
             </CardHeader>
             <CardContent>
               <p>{meeting.organizador}</p>
@@ -93,14 +93,14 @@ const MeetingDetail = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Recording</CardTitle>
+              <CardTitle>Gravação</CardTitle>
             </CardHeader>
             <CardContent>
               <Button 
                 variant="outline"
                 onClick={() => window.open(meeting.link_gravacao, "_blank")}
               >
-                <ExternalLink className="mr-2 h-4 w-4" /> Open Recording
+                <ExternalLink className="mr-2 h-4 w-4" /> Abrir Gravação
               </Button>
             </CardContent>
           </Card>
@@ -108,7 +108,7 @@ const MeetingDetail = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Participants ({meeting.convidados.length})</CardTitle>
+            <CardTitle>Participantes ({meeting.convidados.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -123,7 +123,7 @@ const MeetingDetail = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Summary</CardTitle>
+            <CardTitle>Resumo</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-line">{meeting.resumo}</p>
@@ -132,7 +132,7 @@ const MeetingDetail = () => {
 
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Transcript</CardTitle>
+            <CardTitle>Transcrição</CardTitle>
           </CardHeader>
           <Separator />
           <ScrollArea className="h-[300px] p-6">

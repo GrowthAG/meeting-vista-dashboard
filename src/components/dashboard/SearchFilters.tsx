@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface SearchFiltersProps {
@@ -44,7 +45,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <Input
-            placeholder="Search in summary or transcript..."
+            placeholder="Buscar no resumo ou transcrição..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full"
@@ -52,7 +53,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
         </div>
         <div className="flex-1">
           <Input
-            placeholder="Filter by organizer email..."
+            placeholder="Filtrar por email do organizador..."
             value={organizer}
             onChange={(e) => setOrganizer(e.target.value)}
             className="w-full"
@@ -72,7 +73,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFrom ? format(dateFrom, "PPP") : <span>From date</span>}
+                {dateFrom ? format(dateFrom, "PPP", { locale: ptBR }) : <span>Data inicial</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -81,6 +82,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
                 selected={dateFrom}
                 onSelect={setDateFrom}
                 initialFocus
+                locale={ptBR}
                 className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
@@ -98,7 +100,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateTo ? format(dateTo, "PPP") : <span>To date</span>}
+                {dateTo ? format(dateTo, "PPP", { locale: ptBR }) : <span>Data final</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -107,6 +109,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
                 selected={dateTo}
                 onSelect={setDateTo}
                 initialFocus
+                locale={ptBR}
                 className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
@@ -115,9 +118,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch }) => {
 
         <div className="flex gap-2 justify-end sm:ml-auto">
           <Button variant="outline" onClick={handleReset}>
-            Reset
+            Limpar
           </Button>
-          <Button onClick={handleSearch}>Search</Button>
+          <Button onClick={handleSearch}>Buscar</Button>
         </div>
       </div>
     </div>

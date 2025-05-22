@@ -25,8 +25,8 @@ const MeetingsList: React.FC<MeetingsListProps> = ({ meetings, loading }) => {
   if (meetings.length === 0) {
     return (
       <div className="text-center py-10">
-        <h3 className="text-lg font-medium text-gray-500">No meetings found</h3>
-        <p className="text-sm text-gray-400">Try changing your search filters</p>
+        <h3 className="text-lg font-medium text-gray-500">Nenhuma reunião encontrada</h3>
+        <p className="text-sm text-gray-400">Tente mudar seus filtros de busca</p>
       </div>
     );
   }

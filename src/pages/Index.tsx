@@ -5,6 +5,7 @@ import { fetchMeetings, getStatistics, searchMeetings } from "@/lib/meeting-serv
 import SearchFilters from "@/components/dashboard/SearchFilters";
 import MeetingsList from "@/components/dashboard/MeetingsList";
 import StatsCards from "@/components/dashboard/StatsCards";
+import WebhookInfo from "@/components/dashboard/WebhookInfo";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -26,14 +27,18 @@ const Index = () => {
         const meetingStats = await getStatistics();
         setStats(meetingStats);
       } catch (error) {
-        console.error("Error loading meetings:", error);
-        toast.error("Failed to load meetings. Please try again.");
+        console.error("Erro ao carregar reuniões:", error);
+        toast.error("Falha ao carregar reuniões. Por favor, tente novamente.");
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
+    
+    // Adiciona um intervalo para atualização automática a cada 1 minuto
+    const intervalId = setInterval(loadData, 60000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleSearch = async (query: string, organizer: string, dateFrom: string, dateTo: string) => {
@@ -45,8 +50,8 @@ const Index = () => {
       );
       setMeetings(results);
     } catch (error) {
-      console.error("Search error:", error);
-      toast.error("Search failed. Please try again.");
+      console.error("Erro na busca:", error);
+      toast.error("Falha na busca. Por favor, tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -55,10 +60,14 @@ const Index = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Meetings Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Painel de Reuniões</h1>
         <p className="text-muted-foreground">
-          View and analyze your meeting data
+          Visualize e analise seus dados de reuniões
         </p>
+      </div>
+
+      <div className="mb-8">
+        <WebhookInfo />
       </div>
 
       <div className="mb-8">
@@ -71,7 +80,7 @@ const Index = () => {
 
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">
-          {loading ? "Loading meetings..." : `${meetings.length} meetings found`}
+          {loading ? "Carregando reuniões..." : `${meetings.length} reuniões encontradas`}
         </h2>
       </div>
 

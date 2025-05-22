@@ -28,14 +28,14 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
         </div>
         
         <h3 className="text-lg font-semibold mt-2 truncate">
-          Organizer: {meeting.organizador}
+          Organizador: {meeting.organizador}
         </h3>
         
         <div className="mt-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="text-sm text-muted-foreground">
-                {meeting.convidados.length} participants
+                {meeting.convidados.length} participantes
                 {meeting.convidados.length > 0 && ": "}
                 {meeting.convidados.slice(0, 2).join(", ")}
                 {meeting.convidados.length > 2 && "..."}
@@ -50,19 +50,19 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
         </div>
         
         <div className="mt-4 text-sm line-clamp-3">
-          <span className="font-medium">Summary: </span>
+          <span className="font-medium">Resumo: </span>
           {meeting.resumo}
         </div>
         
         <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
-          <span className="font-medium">Transcript: </span>
+          <span className="font-medium">Transcrição: </span>
           {meeting.transcricao}
         </div>
       </CardContent>
       
       <CardFooter className="flex justify-between border-t p-4 pt-4">
         <Button asChild variant="outline" size="sm">
-          <Link to={`/meeting/${meeting.id}`}>View Details</Link>
+          <Link to={`/meeting/${meeting.id}`}>Ver Detalhes</Link>
         </Button>
         
         <Button
@@ -71,7 +71,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
           onClick={() => window.open(meeting.link_gravacao, "_blank")}
         >
           <ExternalLink className="mr-2 h-4 w-4" />
-          Recording
+          Gravação
         </Button>
       </CardFooter>
     </Card>
