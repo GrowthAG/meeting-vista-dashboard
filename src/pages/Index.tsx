@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Meeting } from "@/types/meeting";
-import { fetchMeetings, getStatistics, searchMeetings } from "@/lib/meeting-service";
+import { fetchMeetings, getStatistics, searchMeetings, receiveWebhookData } from "@/lib/meeting-service";
 import SearchFilters from "@/components/dashboard/SearchFilters";
 import MeetingsList from "@/components/dashboard/MeetingsList";
 import StatsCards from "@/components/dashboard/StatsCards";
@@ -13,31 +13,69 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, thisWeek: 0, thisMonth: 0 });
 
+  // Simular uma interceptação de webhook para fins de demonstração
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const fetchedMeetings = await fetchMeetings();
-        // Sort by date descending (most recent first)
-        fetchedMeetings.sort((a, b) => 
-          new Date(b.data_reuniao).getTime() - new Date(a.data_reuniao).getTime()
-        );
-        setMeetings(fetchedMeetings);
-        
-        const meetingStats = await getStatistics();
-        setStats(meetingStats);
-      } catch (error) {
-        console.error("Erro ao carregar reuniões:", error);
-        toast.error("Falha ao carregar reuniões. Por favor, tente novamente.");
-      } finally {
-        setLoading(false);
+    // Intercepta requisições para o endpoint /api/meetings/webhook
+    const originalFetch = window.fetch;
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.url;
+      
+      // Verifica se é uma requisição para o webhook
+      if (url.includes('/api/meetings/webhook') && init?.method === 'POST') {
+        try {
+          const body = JSON.parse(init.body as string);
+          const newMeeting = await receiveWebhookData(body);
+          if (newMeeting) {
+            loadData(); // Recarrega os dados ao receber uma nova reunião
+            return new Response(JSON.stringify(newMeeting), {
+              headers: { 'Content-Type': 'application/json' },
+              status: 201
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao processar webhook:", error);
+          return new Response(JSON.stringify({ error: "Erro ao processar dados" }), {
+            headers: { 'Content-Type': 'application/json' },
+            status: 400
+          });
+        }
       }
+      
+      // Para todas as outras requisições, usa o fetch original
+      return originalFetch(input, init);
     };
+    
+    // Limpa o interceptor quando o componente for desmontado
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const fetchedMeetings = await fetchMeetings();
+      // Sort by date descending (most recent first)
+      fetchedMeetings.sort((a, b) => 
+        new Date(b.data_reuniao).getTime() - new Date(a.data_reuniao).getTime()
+      );
+      setMeetings(fetchedMeetings);
+      
+      const meetingStats = await getStatistics();
+      setStats(meetingStats);
+    } catch (error) {
+      console.error("Erro ao carregar reuniões:", error);
+      toast.error("Falha ao carregar reuniões. Por favor, tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
     
-    // Adiciona um intervalo para atualização automática a cada 1 minuto
-    const intervalId = setInterval(loadData, 60000);
+    // Adiciona um intervalo para atualização automática a cada 30 segundos
+    const intervalId = setInterval(loadData, 30000);
     return () => clearInterval(intervalId);
   }, []);
 
