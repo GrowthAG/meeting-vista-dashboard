@@ -18,10 +18,12 @@ const Index = () => {
     // Intercepta requisições para o endpoint /api/meetings/webhook
     const originalFetch = window.fetch;
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input.url;
+      // Extrair a URL como string, seja qual for o tipo de input
+      const urlString = input instanceof URL ? input.toString() : 
+                        typeof input === 'string' ? input : input.url;
       
       // Verifica se é uma requisição para o webhook
-      if (url.includes('/api/meetings/webhook') && init?.method === 'POST') {
+      if (urlString.includes('/api/meetings/webhook') && init?.method === 'POST') {
         try {
           const body = JSON.parse(init.body as string);
           const newMeeting = await receiveWebhookData(body);
