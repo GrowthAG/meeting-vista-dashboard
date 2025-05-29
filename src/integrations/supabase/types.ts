@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      meetings: {
+        Row: {
+          convidados: string[]
+          created_at: string | null
+          data_reuniao: string
+          horario_reuniao: string
+          id: string
+          link_gravacao: string | null
+          organizador: string
+          resumo: string | null
+          transcricao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          convidados?: string[]
+          created_at?: string | null
+          data_reuniao: string
+          horario_reuniao: string
+          id?: string
+          link_gravacao?: string | null
+          organizador: string
+          resumo?: string | null
+          transcricao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          convidados?: string[]
+          created_at?: string | null
+          data_reuniao?: string
+          horario_reuniao?: string
+          id?: string
+          link_gravacao?: string | null
+          organizador?: string
+          resumo?: string | null
+          transcricao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

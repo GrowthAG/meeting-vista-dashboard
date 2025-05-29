@@ -1,61 +1,46 @@
 
 import { Meeting } from "@/types/meeting";
-import { mockMeetings } from "./mock-meetings";
-import { toast } from "sonner";
-
-// Estas URLs serão automaticamente configuradas pela integração do Lovable com Supabase
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
-
-// Variável para armazenar as reuniões em memória (fallback)
-let inMemoryMeetings: Meeting[] = [...mockMeetings];
+import { supabase } from "@/integrations/supabase/client";
 
 // Função para buscar todas as reuniões do Supabase
 export const fetchMeetings = async (): Promise<Meeting[]> => {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?select=*&order=data_reuniao.desc`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const { data, error } = await supabase
+      .from('meetings')
+      .select('*')
+      .order('data_reuniao', { ascending: false });
     
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Reuniões carregadas do Supabase:', data.length);
-      return data;
-    } else {
-      console.log('Erro na resposta do Supabase:', response.status, response.statusText);
-      console.log("Usando dados em memória devido a falha na API do Supabase");
-      return inMemoryMeetings;
+    if (error) {
+      console.error('Erro ao buscar reuniões:', error);
+      throw error;
     }
+    
+    console.log('Reuniões carregadas do Supabase:', data.length);
+    return data || [];
   } catch (error) {
     console.error("Erro ao buscar reuniões do Supabase:", error);
-    return inMemoryMeetings;
+    throw error;
   }
 };
 
 // Função para buscar uma reunião específica por ID
 export const fetchMeetingById = async (id: string): Promise<Meeting | undefined> => {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?id=eq.${id}&select=*`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const { data, error } = await supabase
+      .from('meetings')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (response.ok) {
-      const data = await response.json();
-      return data[0];
+    if (error) {
+      console.error(`Erro ao buscar reunião com ID ${id}:`, error);
+      return undefined;
     }
     
-    return inMemoryMeetings.find(meeting => meeting.id === id);
+    return data;
   } catch (error) {
     console.error(`Erro ao buscar reunião com ID ${id}:`, error);
-    return inMemoryMeetings.find(meeting => meeting.id === id);
+    return undefined;
   }
 };
 
@@ -67,98 +52,58 @@ export const searchMeetings = async (
   dateTo: string
 ): Promise<Meeting[]> => {
   try {
-    let supabaseQuery = `${SUPABASE_URL}/rest/v1/meetings?select=*`;
+    let supabaseQuery = supabase.from('meetings').select('*');
     
-    // Adicionar filtros à query do Supabase
+    // Adicionar filtros
     if (query) {
-      supabaseQuery += `&or=(resumo.ilike.*${query}*,transcricao.ilike.*${query}*)`;
+      supabaseQuery = supabaseQuery.or(`resumo.ilike.%${query}%,transcricao.ilike.%${query}%`);
     }
     if (organizer) {
-      supabaseQuery += `&organizador.ilike.*${organizer}*`;
+      supabaseQuery = supabaseQuery.ilike('organizador', `%${organizer}%`);
     }
     if (dateFrom) {
-      supabaseQuery += `&data_reuniao.gte.${dateFrom}`;
+      supabaseQuery = supabaseQuery.gte('data_reuniao', dateFrom);
     }
     if (dateTo) {
-      supabaseQuery += `&data_reuniao.lte.${dateTo}`;
+      supabaseQuery = supabaseQuery.lte('data_reuniao', dateTo);
     }
     
-    supabaseQuery += `&order=data_reuniao.desc`;
+    const { data, error } = await supabaseQuery.order('data_reuniao', { ascending: false });
     
-    const response = await fetch(supabaseQuery, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data;
+    if (error) {
+      console.error("Erro ao pesquisar reuniões:", error);
+      throw error;
     }
     
-    // Fallback para filtro local com dados em memória
-    return filterMeetingsLocally(inMemoryMeetings, query, organizer, dateFrom, dateTo);
+    return data || [];
   } catch (error) {
     console.error("Erro ao pesquisar reuniões:", error);
-    return filterMeetingsLocally(inMemoryMeetings, query, organizer, dateFrom, dateTo);
+    throw error;
   }
-};
-
-// Função para filtrar reuniões localmente (fallback)
-const filterMeetingsLocally = (
-  meetings: Meeting[], 
-  query: string,
-  organizer: string,
-  dateFrom: string,
-  dateTo: string
-): Meeting[] => {
-  return meetings.filter(meeting => {
-    const matchesQuery = !query || 
-      meeting.resumo.toLowerCase().includes(query.toLowerCase()) || 
-      meeting.transcricao.toLowerCase().includes(query.toLowerCase());
-    
-    const matchesOrganizer = !organizer || 
-      meeting.organizador.toLowerCase().includes(organizer.toLowerCase());
-    
-    const matchesDateFrom = !dateFrom || 
-      new Date(meeting.data_reuniao) >= new Date(dateFrom);
-    
-    const matchesDateTo = !dateTo || 
-      new Date(meeting.data_reuniao) <= new Date(dateTo);
-    
-    return matchesQuery && matchesOrganizer && matchesDateFrom && matchesDateTo;
-  });
 };
 
 // Função para obter estatísticas
 export const getStatistics = async () => {
   try {
-    // Buscar estatísticas do Supabase
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?select=data_reuniao`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const { data: meetings, error } = await supabase
+      .from('meetings')
+      .select('data_reuniao');
     
-    if (response.ok) {
-      const meetings = await response.json();
-      console.log('Estatísticas calculadas com', meetings.length, 'reuniões');
-      return calculateStatisticsLocally(meetings);
+    if (error) {
+      console.error("Erro ao obter estatísticas:", error);
+      throw error;
     }
     
-    return calculateStatisticsLocally(inMemoryMeetings);
+    console.log('Estatísticas calculadas com', meetings?.length || 0, 'reuniões');
+    return calculateStatisticsLocally(meetings || []);
   } catch (error) {
     console.error("Erro ao obter estatísticas:", error);
-    return calculateStatisticsLocally(inMemoryMeetings);
+    throw error;
   }
 };
 
 // Função para calcular estatísticas localmente
-const calculateStatisticsLocally = (meetings: Meeting[]) => {
+const calculateStatisticsLocally = (meetings: any[]) => {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());

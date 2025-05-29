@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/accordion";
 
 const WebhookInfo = () => {
-  // URL da função Edge do Supabase para o webhook (será atualizada automaticamente)
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
-  const webhookUrl = `${supabaseUrl}/functions/v1/webhook-meetings`;
+  // URL da função Edge do Supabase para o webhook
+  const webhookUrl = "https://hazatvlxpkfcpuagaism.supabase.co/functions/v1/webhook-meetings";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(webhookUrl)
@@ -37,7 +36,7 @@ const WebhookInfo = () => {
   // Comando curl para teste
   const curlCommand = `curl -X POST ${webhookUrl} \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_ANON_KEY" \\
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhemF0dmx4cGtmY3B1YWdhaXNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjA1MTEsImV4cCI6MjA2NDA5NjUxMX0.X4ofgTePg7spG16fpPtB8FCM6csbog9vwZstIwJD8Io" \\
   -d '${jsonExample}'`;
 
   return (
@@ -78,20 +77,21 @@ const WebhookInfo = () => {
                   <pre className="text-xs overflow-auto">{jsonExample}</pre>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Exemplo de comando curl para testar (substitua YOUR_ANON_KEY pela sua chave anônima do Supabase):
+                  Exemplo de comando curl para testar:
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-xs overflow-auto">{curlCommand}</pre>
                 </div>
                 <div className="bg-green-50 border border-green-200 p-4 rounded-md">
                   <p className="text-sm text-green-800">
-                    <strong>Status:</strong> Estrutura backend criada! ✅
+                    <strong>Status:</strong> Backend totalmente configurado! ✅
                   </p>
                   <ul className="text-sm text-green-800 mt-2 list-disc list-inside space-y-1">
-                    <li>Função Edge "webhook-meetings" criada</li>
-                    <li>Tabela "meetings" configurada</li>
+                    <li>Função Edge "webhook-meetings" criada e implantada</li>
+                    <li>Tabela "meetings" configurada com índices</li>
                     <li>Políticas RLS implementadas</li>
                     <li>Webhook funcional e pronto para receber dados</li>
+                    <li>Frontend conectado ao Supabase</li>
                   </ul>
                 </div>
               </div>
