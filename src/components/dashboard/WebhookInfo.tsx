@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/accordion";
 
 const WebhookInfo = () => {
-  // URL da função Edge do Supabase para o webhook
-  const webhookUrl = `https://your-project-id.supabase.co/functions/v1/webhook-meetings`;
+  // URL da função Edge do Supabase para o webhook (será atualizada automaticamente)
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
+  const webhookUrl = `${supabaseUrl}/functions/v1/webhook-meetings`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(webhookUrl)
@@ -82,16 +83,16 @@ const WebhookInfo = () => {
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-xs overflow-auto">{curlCommand}</pre>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
-                  <p className="text-sm text-blue-800">
-                    <strong>Próximos passos:</strong>
+                <div className="bg-green-50 border border-green-200 p-4 rounded-md">
+                  <p className="text-sm text-green-800">
+                    <strong>Status:</strong> Estrutura backend criada! ✅
                   </p>
-                  <ol className="text-sm text-blue-800 mt-2 list-decimal list-inside space-y-1">
-                    <li>Criar a função Edge "webhook-meetings" no Supabase</li>
-                    <li>Criar a tabela "meetings" no banco de dados</li>
-                    <li>Configurar as políticas RLS (Row Level Security)</li>
-                    <li>Atualizar a URL acima com o ID correto do seu projeto</li>
-                  </ol>
+                  <ul className="text-sm text-green-800 mt-2 list-disc list-inside space-y-1">
+                    <li>Função Edge "webhook-meetings" criada</li>
+                    <li>Tabela "meetings" configurada</li>
+                    <li>Políticas RLS implementadas</li>
+                    <li>Webhook funcional e pronto para receber dados</li>
+                  </ul>
                 </div>
               </div>
             </AccordionContent>

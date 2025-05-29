@@ -3,9 +3,9 @@ import { Meeting } from "@/types/meeting";
 import { mockMeetings } from "./mock-meetings";
 import { toast } from "sonner";
 
-// Configuração do Supabase (será configurada automaticamente pela integração do Lovable)
-const SUPABASE_URL = 'https://your-project-id.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+// Estas URLs serão automaticamente configuradas pela integração do Lovable com Supabase
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
 // Variável para armazenar as reuniões em memória (fallback)
 let inMemoryMeetings: Meeting[] = [...mockMeetings];
@@ -23,11 +23,13 @@ export const fetchMeetings = async (): Promise<Meeting[]> => {
     
     if (response.ok) {
       const data = await response.json();
+      console.log('Reuniões carregadas do Supabase:', data.length);
       return data;
+    } else {
+      console.log('Erro na resposta do Supabase:', response.status, response.statusText);
+      console.log("Usando dados em memória devido a falha na API do Supabase");
+      return inMemoryMeetings;
     }
-    
-    console.log("Usando dados em memória devido a falha na API do Supabase");
-    return inMemoryMeetings;
   } catch (error) {
     console.error("Erro ao buscar reuniões do Supabase:", error);
     return inMemoryMeetings;
@@ -144,6 +146,7 @@ export const getStatistics = async () => {
     
     if (response.ok) {
       const meetings = await response.json();
+      console.log('Estatísticas calculadas com', meetings.length, 'reuniões');
       return calculateStatisticsLocally(meetings);
     }
     
