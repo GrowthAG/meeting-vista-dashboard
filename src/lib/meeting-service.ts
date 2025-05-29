@@ -2,35 +2,34 @@
 import { Meeting } from "@/types/meeting";
 import { mockMeetings } from "./mock-meetings";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 
-const API_BASE_URL = window.location.origin;
-const API_URL = `${API_BASE_URL}/api/meetings`;
+// Configuração do Supabase (será configurada automaticamente pela integração do Lovable)
+const SUPABASE_URL = 'https://your-project-id.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key';
 
-// Variável para armazenar as reuniões em memória (solução temporária)
+// Variável para armazenar as reuniões em memória (fallback)
 let inMemoryMeetings: Meeting[] = [...mockMeetings];
 
-// Função para buscar todas as reuniões
+// Função para buscar todas as reuniões do Supabase
 export const fetchMeetings = async (): Promise<Meeting[]> => {
   try {
-    // Tenta buscar do endpoint real
-    const response = await fetch(API_URL);
-    
-    // Verifica se a resposta é válida
-    if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          return data;
-        }
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?select=*&order=data_reuniao.desc`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
       }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data;
     }
     
-    console.log("Usando dados em memória devido a falha na API");
+    console.log("Usando dados em memória devido a falha na API do Supabase");
     return inMemoryMeetings;
   } catch (error) {
-    console.error("Erro ao buscar reuniões:", error);
+    console.error("Erro ao buscar reuniões do Supabase:", error);
     return inMemoryMeetings;
   }
 };
@@ -38,16 +37,19 @@ export const fetchMeetings = async (): Promise<Meeting[]> => {
 // Função para buscar uma reunião específica por ID
 export const fetchMeetingById = async (id: string): Promise<Meeting | undefined> => {
   try {
-    // Tenta buscar do endpoint real
-    const response = await fetch(`${API_URL}/${id}`);
-    if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        return await response.json();
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?id=eq.${id}&select=*`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
       }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data[0];
     }
     
-    // Fallback para dados em memória
     return inMemoryMeetings.find(meeting => meeting.id === id);
   } catch (error) {
     console.error(`Erro ao buscar reunião com ID ${id}:`, error);
@@ -63,21 +65,35 @@ export const searchMeetings = async (
   dateTo: string
 ): Promise<Meeting[]> => {
   try {
-    // Constrói a URL com parâmetros de consulta
-    const params = new URLSearchParams();
-    if (query) params.append("query", query);
-    if (organizer) params.append("organizer", organizer);
-    if (dateFrom) params.append("dateFrom", dateFrom);
-    if (dateTo) params.append("dateTo", dateTo);
+    let supabaseQuery = `${SUPABASE_URL}/rest/v1/meetings?select=*`;
     
-    const url = `${API_URL}/search?${params.toString()}`;
-    const response = await fetch(url);
+    // Adicionar filtros à query do Supabase
+    if (query) {
+      supabaseQuery += `&or=(resumo.ilike.*${query}*,transcricao.ilike.*${query}*)`;
+    }
+    if (organizer) {
+      supabaseQuery += `&organizador.ilike.*${organizer}*`;
+    }
+    if (dateFrom) {
+      supabaseQuery += `&data_reuniao.gte.${dateFrom}`;
+    }
+    if (dateTo) {
+      supabaseQuery += `&data_reuniao.lte.${dateTo}`;
+    }
+    
+    supabaseQuery += `&order=data_reuniao.desc`;
+    
+    const response = await fetch(supabaseQuery, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        return await response.json();
-      }
+      const data = await response.json();
+      return data;
     }
     
     // Fallback para filtro local com dados em memória
@@ -88,7 +104,7 @@ export const searchMeetings = async (
   }
 };
 
-// Função para filtrar reuniões localmente
+// Função para filtrar reuniões localmente (fallback)
 const filterMeetingsLocally = (
   meetings: Meeting[], 
   query: string,
@@ -97,20 +113,16 @@ const filterMeetingsLocally = (
   dateTo: string
 ): Meeting[] => {
   return meetings.filter(meeting => {
-    // Filtro por texto de busca
     const matchesQuery = !query || 
       meeting.resumo.toLowerCase().includes(query.toLowerCase()) || 
       meeting.transcricao.toLowerCase().includes(query.toLowerCase());
     
-    // Filtro por organizador
     const matchesOrganizer = !organizer || 
       meeting.organizador.toLowerCase().includes(organizer.toLowerCase());
     
-    // Filtro por data inicial
     const matchesDateFrom = !dateFrom || 
       new Date(meeting.data_reuniao) >= new Date(dateFrom);
     
-    // Filtro por data final
     const matchesDateTo = !dateTo || 
       new Date(meeting.data_reuniao) <= new Date(dateTo);
     
@@ -121,17 +133,20 @@ const filterMeetingsLocally = (
 // Função para obter estatísticas
 export const getStatistics = async () => {
   try {
-    // Tenta buscar do endpoint real
-    const response = await fetch(`${API_URL}/statistics`);
+    // Buscar estatísticas do Supabase
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/meetings?select=data_reuniao`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
     if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        return await response.json();
-      }
+      const meetings = await response.json();
+      return calculateStatisticsLocally(meetings);
     }
     
-    // Fallback para calcular estatísticas localmente
     return calculateStatisticsLocally(inMemoryMeetings);
   } catch (error) {
     console.error("Erro ao obter estatísticas:", error);
@@ -162,48 +177,3 @@ const calculateStatisticsLocally = (meetings: Meeting[]) => {
     thisMonth
   };
 };
-
-// Função para receber novos dados do webhook
-export const receiveWebhookData = async (data: Omit<Meeting, "id">): Promise<Meeting | null> => {
-  try {
-    // Primeiro tenta enviar para o endpoint real
-    const response = await fetch(`${API_URL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (response.ok) {
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const newMeeting = await response.json();
-        return newMeeting;
-      }
-    }
-    
-    // Se falhar, armazena em memória (solução temporária)
-    const newMeeting: Meeting = {
-      id: uuidv4(),
-      ...data
-    };
-    
-    inMemoryMeetings.push(newMeeting);
-    toast.success("Nova reunião recebida!");
-    return newMeeting;
-  } catch (error) {
-    console.error("Erro ao processar dados do webhook:", error);
-    
-    // Mesmo com erro, armazena em memória
-    const newMeeting: Meeting = {
-      id: uuidv4(),
-      ...data
-    };
-    
-    inMemoryMeetings.push(newMeeting);
-    toast.success("Nova reunião recebida!");
-    return newMeeting;
-  }
-};
-

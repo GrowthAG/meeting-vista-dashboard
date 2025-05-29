@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/accordion";
 
 const WebhookInfo = () => {
-  // URL completa para o webhook
-  const webhookUrl = `${window.location.origin}/api/meetings/webhook`;
+  // URL da função Edge do Supabase para o webhook
+  const webhookUrl = `https://your-project-id.supabase.co/functions/v1/webhook-meetings`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(webhookUrl)
@@ -36,6 +36,7 @@ const WebhookInfo = () => {
   // Comando curl para teste
   const curlCommand = `curl -X POST ${webhookUrl} \\
   -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_ANON_KEY" \\
   -d '${jsonExample}'`;
 
   return (
@@ -43,7 +44,7 @@ const WebhookInfo = () => {
       <CardHeader>
         <CardTitle>Configuração do Webhook</CardTitle>
         <CardDescription>
-          Envie dados de reuniões para esta URL
+          Envie dados de reuniões para esta URL da função Edge do Supabase
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -70,21 +71,27 @@ const WebhookInfo = () => {
             <AccordionContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Envie solicitações POST para este endpoint no formato JSON com a seguinte estrutura:
+                  Envie solicitações POST para este endpoint da função Edge do Supabase no formato JSON:
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-xs overflow-auto">{jsonExample}</pre>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Exemplo de comando curl para testar:
+                  Exemplo de comando curl para testar (substitua YOUR_ANON_KEY pela sua chave anônima do Supabase):
                 </p>
                 <div className="bg-muted p-4 rounded-md">
                   <pre className="text-xs overflow-auto">{curlCommand}</pre>
                 </div>
-                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Nota:</strong> Como não há backend configurado, os dados serão armazenados temporariamente na memória do navegador e serão perdidos ao atualizar a página.
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>Próximos passos:</strong>
                   </p>
+                  <ol className="text-sm text-blue-800 mt-2 list-decimal list-inside space-y-1">
+                    <li>Criar a função Edge "webhook-meetings" no Supabase</li>
+                    <li>Criar a tabela "meetings" no banco de dados</li>
+                    <li>Configurar as políticas RLS (Row Level Security)</li>
+                    <li>Atualizar a URL acima com o ID correto do seu projeto</li>
+                  </ol>
                 </div>
               </div>
             </AccordionContent>

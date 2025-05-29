@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Meeting } from "@/types/meeting";
-import { fetchMeetings, getStatistics, searchMeetings, receiveWebhookData } from "@/lib/meeting-service";
+import { fetchMeetings, getStatistics, searchMeetings } from "@/lib/meeting-service";
 import SearchFilters from "@/components/dashboard/SearchFilters";
 import MeetingsList from "@/components/dashboard/MeetingsList";
 import StatsCards from "@/components/dashboard/StatsCards";
@@ -12,46 +12,6 @@ const Index = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, thisWeek: 0, thisMonth: 0 });
-
-  // Simular uma interceptação de webhook para fins de demonstração
-  useEffect(() => {
-    // Intercepta requisições para o endpoint /api/meetings/webhook
-    const originalFetch = window.fetch;
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      // Extrair a URL como string, seja qual for o tipo de input
-      const urlString = input instanceof URL ? input.toString() : 
-                        typeof input === 'string' ? input : input.url;
-      
-      // Verifica se é uma requisição para o webhook
-      if (urlString.includes('/api/meetings/webhook') && init?.method === 'POST') {
-        try {
-          const body = JSON.parse(init.body as string);
-          const newMeeting = await receiveWebhookData(body);
-          if (newMeeting) {
-            loadData(); // Recarrega os dados ao receber uma nova reunião
-            return new Response(JSON.stringify(newMeeting), {
-              headers: { 'Content-Type': 'application/json' },
-              status: 201
-            });
-          }
-        } catch (error) {
-          console.error("Erro ao processar webhook:", error);
-          return new Response(JSON.stringify({ error: "Erro ao processar dados" }), {
-            headers: { 'Content-Type': 'application/json' },
-            status: 400
-          });
-        }
-      }
-      
-      // Para todas as outras requisições, usa o fetch original
-      return originalFetch(input, init);
-    };
-    
-    // Limpa o interceptor quando o componente for desmontado
-    return () => {
-      window.fetch = originalFetch;
-    };
-  }, []);
 
   const loadData = async () => {
     try {
