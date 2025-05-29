@@ -1,1 +1,5 @@
+
 project_id = "hazatvlxpkfcpuagaism"
+
+[functions.webhook-meetings]
+verify_jwt = false
